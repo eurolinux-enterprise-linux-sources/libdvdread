@@ -1,6 +1,6 @@
 Name:           libdvdread
 Version:        4.1.4
-Release:        0.2.svn1183%{?dist}
+Release:        0.3.svn1183%{?dist}
 Summary:        A library for reading DVD video discs based on Ogle code
 
 Group:          System Environment/Libraries
@@ -14,6 +14,8 @@ Patch0:         %{name}-endian.patch
 # dvdread-config: use pkg-config instead of hard-coded 
 # multilib-conflicting values
 Patch1:         %{name}-multilib.patch
+# make dvd_stat_t struct public
+Patch2:         %{name}-dvdstat.patch
 
 %description
 libdvdread provides a simple foundation for reading DVD video disks.
@@ -35,6 +37,7 @@ This package contains development files for libdvdread.
 %setup -q
 %patch0 -p1 -b .endian
 %patch1 -p1 -b .multilib
+%patch2 -p1 -b .dvdstat
 
 %build
 ./configure2 \
@@ -73,6 +76,10 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/dvdread.pc
 
 %changelog
+* Wed Sep 05 2012 Honza Horak <hhorak@redhat.com> - 4.1.4-0.3.svn1183
+- Make dvd_stat_t struct public
+  Resolves: #842016
+
 * Wed Jun 23 2010 Roman Rakus <rrakus@redhat.com> - 4.1.4-0.2.svn1183
 - Build with -fno-strict-aliasing CFLAG
   Resolves: #605071
