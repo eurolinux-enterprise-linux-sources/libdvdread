@@ -1,6 +1,6 @@
 Name:           libdvdread
 Version:        4.2.0
-Release:        4%{?dist}
+Release:        6%{?dist}
 Summary:        A library for reading DVD video discs based on Ogle code
 
 Group:          System Environment/Libraries
@@ -36,7 +36,7 @@ This package contains development files for libdvdread.
  --disable-opts \
  --disable-static \
  --disable-strip \
- --extra-cflags="%{optflags} -fno-strict-aliasing" \
+ --extra-cflags="%{optflags}" \
  --libdir=%{_libdir} \
  --prefix=%{_prefix} \
  --shlibdir=%{_libdir} \
@@ -44,7 +44,11 @@ This package contains development files for libdvdread.
 %{__make} %{?_smp_mflags}
 
 %install
+%{__rm} -rf %{buildroot}
 %{__make} install DESTDIR=%{buildroot}
+
+%clean
+rm -rf %{buildroot}
 
 %post -p /sbin/ldconfig
 
@@ -64,9 +68,14 @@ This package contains development files for libdvdread.
 %{_libdir}/pkgconfig/dvdread.pc
 
 %changelog
-* Tue Dec 04 2012 Frantisek Kluknavsky <fkluknav@redhat.com> - 4.2.0-4
-- added -fno-strict-aliasing to cflags
-- minor spec file cleanup
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 4.2.0-6
+- Mass rebuild 2014-01-24
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 4.2.0-5
+- Mass rebuild 2013-12-27
+
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.2.0-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 
 * Thu Jul 19 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 4.2.0-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
