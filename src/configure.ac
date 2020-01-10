@@ -1,38 +1,18 @@
-dnl --------------------------------------------------------------
-dnl Configure.ac for libdvdread
-dnl --------------------------------------------------------------
+AC_INIT(libdvdread, 5.0.3)
+AC_CONFIG_SRCDIR([src/dvd_reader.c])
 
-dnl --------------------------------------------------------------
-dnl Require autoconf version 2.53
-dnl --------------------------------------------------------------
-AC_PREREQ([2.53])
-
-dnl --------------------------------------------------------------
-dnl Making releases: dvdread_sub += 1; change DVDREAD_LT_* accordingly
-dnl
-dnl These are defined in m4 so they can be passed to AC_INIT
-dnl --------------------------------------------------------------
-m4_define([dvdread_major], [4])
-m4_define([dvdread_minor], [2])
-m4_define([dvdread_sub],   [0])
-m4_define([dvdread_pre],   [])
-
-AC_INIT([libdvdread], [dvdread_major.dvdread_minor.dvdread_sub[]dvdread_pre])
-AC_CONFIG_SRCDIR([src/dvdread/dvd_reader.h])
-AM_INIT_AUTOMAKE([1.6])
-
-dnl create a config.h file (Automake will add -DHAVE_CONFIG_H)
-AC_CONFIG_HEADERS([config.h])
+AC_PREREQ(2.53)
 AC_CANONICAL_HOST
 
-DVDREAD_MAJOR="dvdread_major"
-DVDREAD_MINOR="dvdread_minor"
-DVDREAD_SUB="dvdread_sub"
-DVDREAD_PRE="dvdread_pre"
+AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip subdir-objects])
+AM_MAINTAINER_MODE([enable])
+dnl Enable silent rules only when available (automake 1.11 or later).
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AC_SUBST(DVDREAD_MAJOR)
-AC_SUBST(DVDREAD_MINOR)
-AC_SUBST(DVDREAD_SUB)
+LT_INIT
+
+AC_CONFIG_HEADER(config.h)
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl The libtool version numbers (DVDREAD_LT_*); Don't even think about faking this!
 dnl
@@ -57,137 +37,79 @@ dnl  * DVDREAD_LT_AGE is the number of previous API versions still supported by 
 dnl  * libtool has its own numbering scheme, because local library numbering schemes
 dnl    are platform dependent
 dnl  * in Linux, the library will be named
-dnl    libname.so.(DVDREAD_LT_CURRENT - DVDREAD_LT_AGE).DVDREAD_LT_AGE.DVDREAD_LT_REVISION
+dnl    libname.so.(DVDREAD_LT_CURRENT - DVDREAD_LT_AGE).DVDREAD_LT_REVISION.DVDREAD_LT_AGE
 
-DVDREAD_LT_CURRENT=5
-DVDREAD_LT_AGE=1
-DVDREAD_LT_REVISION=2
+DVDREAD_LT_CURRENT=6
+DVDREAD_LT_AGE=2
+DVDREAD_LT_REVISION=0
 
-AC_SUBST(DVDREAD_LT_CURRENT)
-AC_SUBST(DVDREAD_LT_AGE)
-AC_SUBST(DVDREAD_LT_REVISION)
+AC_SUBST([DVDREAD_LTVERSION], [$DVDREAD_LT_CURRENT:$DVDREAD_LT_REVISION:$DVDREAD_LT_AGE])
 
-dnl --------------------------------------------------------------
-dnl Make possible to build for another arch.
-dnl --------------------------------------------------------------
-if test x$DVDREAD_BUILD != "x"; then
-  AC_MSG_RESULT(*** build forced to $DVDREAD_BUILD ***)
-  build=$DVDREAD_BUILD
-  host=$DVDREAD_BUILD
-else
-  check_athlon=yes
-fi
-
-dnl --------------------------------------------------------------
-dnl Checks for programs.
-dnl --------------------------------------------------------------
-dnl Save CFLAGS, AC_ISC_POSIX set some unwanted default CFLAGS
-saved_CFLAGS="$CFLAGS"
-AC_ISC_POSIX
-CFLAGS="$saved_CFLAGS"
 AC_PROG_CC
-AC_PROG_MAKE_SET
-AC_PROG_INSTALL
-AC_PROG_LN_S
 
-dnl --------------------------------------------------------------
-dnl Libtool
-dnl --------------------------------------------------------------
-dnl LT_PREREQ only available in libtool-2.2+
-dnl LT_PREREQ([1.4.0])
-AC_LIBTOOL_DLOPEN
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL
-AC_SUBST(LIBTOOL_DEPS)
-if ${CONFIG_SHELL} ./libtool --features | grep "enable static" >/dev/null; then
-  STATIC="-static"
-else
-  STATIC=
-fi
-AC_SUBST(STATIC)
+AC_CHECK_HEADERS_ONCE([sys/param.h limits.h dlfcn.h])
 
-dnl --------------------------------------------------------------
-dnl Checks for header files.
-dnl --------------------------------------------------------------
-AC_HEADER_STDC
-AC_CHECK_HEADER(unistd.h)
-AC_CHECK_HEADER(string.h)
-
-dnl --------------------------------------------------------------
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl --------------------------------------------------------------
-AC_C_CONST
-AC_C_INLINE
-AC_TYPE_OFF_T
-AC_TYPE_SIZE_T
-dnl AC_CHECK_TYPES([ptrdiff_t])
+AC_SYS_LARGEFILE
 AC_C_BIGENDIAN
 
-dnl -------------------------------------------------------------
-dnl Check for basic *nix fonction that we may emulate on windows.
-dnl -------------------------------------------------------------
-case $host in
-  *mingw32* | *cygwin*)
-    AC_CHECK_FUNCS(gettimeofday)
-    ;;
-  *)
-    ;;
-esac
+AS_CASE([$host],
+  [*mingw32* | *cygwin*], [AC_CHECK_FUNCS(gettimeofday)])
 
-dnl ---------------------------------------------
-dnl dynamic linker
-dnl ---------------------------------------------
-case $host in
-  *mingw32*)
-    CFLAGS="-idirafter \$(top_srcdir)/msvc/include $CFLAGS"
-    LDFLAGS="-no-undefined $LDFLAGS"
-    ;;
-  *cygwin*)
-    LDFLAGS="-no-undefined $LDFLAGS"
-    ;;
-  *os2*)
-    LDFLAGS="-no-undefined -Zbin-files $LDFLAGS"
-    ;;
-  *)
-    AC_CHECK_LIB(c, dlopen,
-                 DYNAMIC_LD_LIBS="",
-                 AC_CHECK_LIB(dl, dlopen,
-                              DYNAMIC_LD_LIBS="-ldl",
-                              AC_MSG_ERROR(dynamic linker needed)))
-    AC_SUBST(DYNAMIC_LD_LIBS)
-    ;;
-esac
+AS_CASE([$host],
+  [*-os2-*], LDFLAGS="-no-undefined -Zbin-files $LDFLAGS")
 
-dnl ---------------------------------------------
-dnl cflags
-dnl ---------------------------------------------
-dnl Common cflags for all platforms
-CFLAGS="-O3 -Wall -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE $CFLAGS"
-DEBUG_CFLAGS="-g -DDEBUG $CFLAGS"
+AC_ARG_WITH([libdvdcss],
+  AS_HELP_STRING([--with-libdvdcss], [Link directly against libdvdcss @<:@default=no@:>@]))
 
-AC_SUBST(DEBUG_CFLAGS)
+AC_ARG_ENABLE([dlfcn],
+  [AS_HELP_STRING([--enable-dlfcn],
+  [use builtin dlfcn for mingw (default is auto)])],
+  [use_builtin_dlfcn=$enableval],
+  [use_builtin_dlfcn=no])
 
-dnl ---------------------------------------------
-dnl Check for doxygen (dynamic documentation generator)
-dnl ---------------------------------------------
-AC_CHECK_PROG(DOXYGEN, doxygen, doxygen, no)
+AS_IF([test x"$with_libdvdcss" = "xyes"], [
+  CSS_REQUIRES="libdvdcss >= 1.2"
+  PKG_CHECK_MODULES([CSS], [$CSS_REQUIRES])
+  AC_CHECK_HEADERS(dvdcss/dvdcss.h,, AC_MSG_ERROR(You need libdvdcss (dvdcss.h)))
+], [
+  AS_CASE([$host],
+    [*mingw32*], [],
+    [use_builtin_dlfcn=no])
 
-dnl ---------------------------------------------
-dnl Some include paths ( !!! DO NOT REMOVE !!! )
-dnl ---------------------------------------------
-INCLUDES='-I$(top_srcdir) $(DVDREAD_CFLAGS)'
-AC_SUBST(INCLUDES)
+  AS_IF([test $use_builtin_dlfcn = "yes"], [
+    AC_DEFINE([USING_BUILTIN_DLFCN], [1], ["Define to 1 to use builtin dlfcn"])
+  ], [
+    AC_SEARCH_LIBS([dlopen], [dl])
+  ])
+])
+AC_SUBST([CSS_REQUIRES])
+
+CC_CHECK_CFLAGS_APPEND([-Wall -Wsign-compare -Wextra])
+
+
+AC_ARG_ENABLE([apidoc],
+  AS_HELP_STRING([--disable-apidoc], [Disable building (with Doxygen) and intalling API documentation @<:@default=auto@:@>]))
+
+AC_PATH_PROG([DOXYGEN], [doxygen])
+
+AS_IF([test "x$DOXYGEN" = "x"], [
+  AS_IF([test "x$enable_apidoc" = "xyes"], [
+    AC_MSG_ERROR([You need Doxygen to build API documentation])
+  ])
+])
+AM_CONDITIONAL([APIDOC], [test "x$DOXYGEN" != "x" && test "x$enable_apidoc" = "xyes"])
+
+AS_IF([test "x$ac_cv_c_compiler_gnu" = "xyes"], [
+  AC_DEFINE([UNUSED], [__attribute__((unused))], [Unused parameter annotation])
+], [
+  AC_DEFINE([UNUSED], [], [Unused parameter annotation])
+])
 
 dnl ---------------------------------------------
 dnl Output configuration files
 dnl ---------------------------------------------
 AC_OUTPUT([
 Makefile
-src/Makefile
-misc/Makefile
-misc/dvdread-config
+doc/doxygen.cfg
 misc/dvdread.pc
-misc/libdvdread.spec
-misc/relchk.sh
-m4/Makefile
 ])

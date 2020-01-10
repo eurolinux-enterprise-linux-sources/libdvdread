@@ -1,15 +1,18 @@
 Name:           libdvdread
-Version:        4.2.0
-Release:        6%{?dist}
+Version:        5.0.3
+Release:        3%{?dist}
 Summary:        A library for reading DVD video discs based on Ogle code
 
 Group:          System Environment/Libraries
 License:        GPLv2+
-Source0:        http://dvdnav.mplayerhq.hu/releases/libdvdread-%{version}.tar.bz2
+URL:            http://dvdnav.mplayerhq.hu/
+Source0:        https://download.videolan.org/pub/videolan/libdvdread/%{version}/libdvdread-%{version}.tar.bz2
+Patch0:		libdvdread-5.0.3-use_after_free.patch
+
+Provides:       bundled(md5-gcc)
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 # dvdread-config: use pkg-config instead of hard-coded 
 # multilib-conflicting values
-Patch1:         %{name}-multilib.patch
 
 %description
 libdvdread provides a simple foundation for reading DVD video disks.
@@ -29,23 +32,17 @@ This package contains development files for libdvdread.
 
 %prep
 %setup -q
-%patch1 -p1 -b .multilib
+%patch0 -p1 -b .use_after_free
 
 %build
-./configure2 \
- --disable-opts \
- --disable-static \
- --disable-strip \
- --extra-cflags="%{optflags}" \
- --libdir=%{_libdir} \
- --prefix=%{_prefix} \
- --shlibdir=%{_libdir} \
+%configure --disable-static
 
-%{__make} %{?_smp_mflags}
+make V=1 %{?_smp_mflags}
 
 %install
 %{__rm} -rf %{buildroot}
 %{__make} install DESTDIR=%{buildroot}
+rm %{buildroot}%{_libdir}/libdvdread.la
 
 %clean
 rm -rf %{buildroot}
@@ -54,20 +51,33 @@ rm -rf %{buildroot}
 
 %postun -p /sbin/ldconfig
 
+%define _pkgdocdir /usr/share/doc/libdvdread
+
 %files
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING ChangeLog README
+%doc %{_pkgdocdir}/AUTHORS
+%doc %{_pkgdocdir}/COPYING
+%doc %{_pkgdocdir}/NEWS
+%doc %{_pkgdocdir}/README
 %{_libdir}/libdvdread.so.*
 
 %files devel
 %defattr(-,root,root,-)
-%doc DEVELOPMENT-POLICY.txt TODO
-%{_bindir}/dvdread-config
+%doc %{_pkgdocdir}/ChangeLog
+%doc %{_pkgdocdir}/TODO
 %{_includedir}/dvdread
 %{_libdir}/libdvdread.so
 %{_libdir}/pkgconfig/dvdread.pc
 
 %changelog
+* Wed May 18 2016 Frantisek Kluknavsky <fkluknav@redhat.com> - 5.0.3-3
+- libdvdread-5.0.3-use_after_free.patch added
+- resolves: #1326238
+
+* Thu May 12 2016 Frantisek Kluknavsky <fkluknav@redhat.com> - 5.0.3-2
+- rebase
+- resolves: #1326238
+
 * Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 4.2.0-6
 - Mass rebuild 2014-01-24
 

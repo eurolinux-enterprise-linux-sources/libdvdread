@@ -32,7 +32,11 @@
 
 #if defined(__GNUC__)
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#define ATTRIBUTE_PACKED __attribute__ ((packed,gcc_struct))
+#else
 #define ATTRIBUTE_PACKED __attribute__ ((packed))
+#endif
 #define PRAGMA_PACK 0
 #endif
 #endif
@@ -301,6 +305,7 @@ typedef struct {
   pgc_program_map_t  *program_map;
   cell_playback_t *cell_playback;
   cell_position_t *cell_position;
+  int      ref_count;
 } ATTRIBUTE_PACKED pgc_t;
 #define PGC_SIZE 236U
 
@@ -326,6 +331,7 @@ typedef struct {
   uint16_t zero_1;
   uint32_t last_byte;
   pgci_srp_t *pgci_srp;
+  int      ref_count;
 } ATTRIBUTE_PACKED pgcit_t;
 #define PGCIT_SIZE 8U
 
